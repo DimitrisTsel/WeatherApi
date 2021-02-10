@@ -20,17 +20,20 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class CallWeatherApi {
-	
+
 	private static final String OpenWeatherApiKey = "cc048903dd1da2a3432cee10c4f61661";
 	private static final String AccessIPkey = "737c8d45325cd14987d1ee427b0cc1bf";
 	private static final String IpAddress = "http://myip.dnsomatic.com/";
 	private static final String getCoordinates = "http://api.ipstack.com/";
 	private static final String OpenWeatherOneCall = "https://api.openweathermap.org/data/2.5/onecall";
 	private static final String OpenWeatherCurrent = "http://api.openweathermap.org/data/2.5/weather";
+	private static CurrentWeather c;
+	private static DailyWeather d;
+	private static HourlyWeather h;
 	
 	public static BufferedReader in = null;
-	
-	public static void getCurrentApi(String location,String type){
+
+	public static String getCurrentApi(String location,String type){
 		DefaultHttpClient httpClient=new DefaultHttpClient();
 		try {
 			HttpGet getRequestCity=new HttpGet(OpenWeatherCurrent+"?q="+location+"&appid="+OpenWeatherApiKey);
@@ -45,12 +48,11 @@ public class CallWeatherApi {
 			HttpGet getRequest=new HttpGet(OpenWeatherOneCall+"?"+city.toString()+"&exclude=daily,minutely,hourly,alerts&appid="+OpenWeatherApiKey+"&units="+type);
 			getRequest.addHeader("accept", "application/json");
 			HttpResponse response=httpClient.execute(getRequest);
-			
-			CurrentWeather c = null;
+		
 			ObjectMapper mapper=new ObjectMapper();
 			mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 			c=mapper.readValue(response.getEntity().getContent(), CurrentWeather.class);
-				System.out.println(c.toString());
+			
 		}
 		catch(JacksonException e) {
 			e.printStackTrace();
@@ -63,216 +65,215 @@ public class CallWeatherApi {
 		}finally{
 			   httpClient.close();
 		}
+		return c.toString();
 	}
-	public static void getCurrentForecastUsingIp(String type) {
-		DefaultHttpClient httpClient = new DefaultHttpClient();		
-		 try 
-         {
-          URL myIP = new URL(IpAddress);
 
-          in = new BufferedReader(new InputStreamReader(myIP.openStream()));
-         
-         } catch (Exception e1) 
-         {
-         }try {
-			//Find IP
-			HttpGet getRequestCoordIP = new HttpGet(getCoordinates+in.readLine()+"?access_key="+AccessIPkey+"&format=1");
-		
+	public static String getCurrentForecastUsingIp(String type) {
+		DefaultHttpClient httpClient = new DefaultHttpClient();
+		try {
+			URL myIP = new URL(IpAddress);
+
+			in = new BufferedReader(new InputStreamReader(myIP.openStream()));
+
+		} catch (Exception e1) {
+		}
+		try {
+			// Find IP
+			HttpGet getRequestCoordIP = new HttpGet(
+					getCoordinates + in.readLine() + "?access_key=" + AccessIPkey + "&format=1");
+
 			getRequestCoordIP.addHeader("accept", "application/json");
 
 			HttpResponse responseCoord = httpClient.execute(getRequestCoordIP);
 
-			IpAddress coordIP = null; 
+			IpAddress coordIP = null;
 
 			ObjectMapper mapperCoordIP = new ObjectMapper();
 			mapperCoordIP.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
 			coordIP = mapperCoordIP.readValue(responseCoord.getEntity().getContent(), IpAddress.class);
-			
-			//OpenWeather data
-			HttpGet getRequest=new HttpGet(OpenWeatherOneCall+"?"+coordIP.toString()+"&exclude=daily,minutely,hourly,alerts&appid="+OpenWeatherApiKey+"&units="+type);
-			getRequest.addHeader("accept", "application/json");
-			HttpResponse response=httpClient.execute(getRequest);
-			System.out.println(coordIP.toString());
-			CurrentWeather c = null;
-			ObjectMapper mapper=new ObjectMapper();
-			mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-			c=mapper.readValue(response.getEntity().getContent(), CurrentWeather.class);
-				System.out.println(c.toString());
-		}
-		catch(JacksonException e) {
-			e.printStackTrace();
-		}
-		catch(ClientProtocolException e) {
-			e.printStackTrace();
-		}
-		catch(IOException e) {
-			e.printStackTrace();
-		}catch (Exception e1) 
-        {
-        }finally{
-			   httpClient.close();
-		}
-	}
-	public static void getDailyApi(String location, String type){
-		DefaultHttpClient httpClient=new DefaultHttpClient();
-		try {
-			HttpGet getRequestCity=new HttpGet(OpenWeatherCurrent+"?q="+location+"&appid="+OpenWeatherApiKey);
-			getRequestCity.addHeader("accept", "application/json");
-			HttpResponse responseCity=httpClient.execute(getRequestCity);
-			
-			CoordTest city = null;
-			ObjectMapper mapperCity=new ObjectMapper();
-			mapperCity.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-			city=mapperCity.readValue(responseCity.getEntity().getContent(), CoordTest.class);
-		
-			HttpGet getRequest=new HttpGet(OpenWeatherOneCall+"?"+city.toString()+"&exclude=minutely,hourly,alerts&appid="+OpenWeatherApiKey+"&units="+type);
-			getRequest.addHeader("accept", "application/json");
-			HttpResponse response=httpClient.execute(getRequest);
-			
-			DailyWeather c = null;
-			ObjectMapper mapper=new ObjectMapper();
-			mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-			c=mapper.readValue(response.getEntity().getContent(), DailyWeather.class);
-				System.out.println(c.toString());
-		}
-		catch(JacksonException e) {
-			e.printStackTrace();
-		}
-		catch(ClientProtocolException e) {
-			e.printStackTrace();
-		}
-		catch(IOException e) {
-			e.printStackTrace();
-		}finally{
-			   httpClient.close();
-		}
-	}	
-	public static void getDailyForecastUsingIp(String type) {
-		DefaultHttpClient httpClient = new DefaultHttpClient();		
-		 try 
-        {
-         URL myIP = new URL(IpAddress);
 
-         in = new BufferedReader(new InputStreamReader(myIP.openStream()));
-        
-        } catch (Exception e1) 
-        {
-        }try {
-			//Find IP
-			HttpGet getRequestCoordIP = new HttpGet(getCoordinates+in.readLine()+"?access_key="+AccessIPkey+"&format=1");
-		
+			// OpenWeather data
+			HttpGet getRequest = new HttpGet(OpenWeatherOneCall + "?" + coordIP.toString()
+					+ "&exclude=daily,minutely,hourly,alerts&appid=" + OpenWeatherApiKey + "&units=" + type);
+			getRequest.addHeader("accept", "application/json");
+			HttpResponse response = httpClient.execute(getRequest);
+			System.out.println(coordIP.toString());
+
+			ObjectMapper mapper = new ObjectMapper();
+			mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+			c = mapper.readValue(response.getEntity().getContent(), CurrentWeather.class);
+		} catch (JacksonException e) {
+			e.printStackTrace();
+		} catch (ClientProtocolException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (Exception e1) {
+		} finally {
+			httpClient.close();
+		}
+		return c.toString();
+	}
+
+	public static String getDailyApi(String location, String type) {
+		DefaultHttpClient httpClient = new DefaultHttpClient();
+		try {
+			HttpGet getRequestCity = new HttpGet(OpenWeatherCurrent + "?q=" + location + "&appid=" + OpenWeatherApiKey);
+			getRequestCity.addHeader("accept", "application/json");
+			HttpResponse responseCity = httpClient.execute(getRequestCity);
+
+			CoordTest city = null;
+			ObjectMapper mapperCity = new ObjectMapper();
+			mapperCity.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+			city = mapperCity.readValue(responseCity.getEntity().getContent(), CoordTest.class);
+
+			HttpGet getRequest = new HttpGet(OpenWeatherOneCall + "?" + city.toString()
+					+ "&exclude=minutely,hourly,alerts&appid=" + OpenWeatherApiKey + "&units=" + type);
+			getRequest.addHeader("accept", "application/json");
+			HttpResponse response = httpClient.execute(getRequest);
+
+			ObjectMapper mapper = new ObjectMapper();
+			mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+			d = mapper.readValue(response.getEntity().getContent(), DailyWeather.class);
+			
+		} catch (JacksonException e) {
+			e.printStackTrace();
+		} catch (ClientProtocolException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			httpClient.close();
+		}
+		return d.toString();
+	}
+
+	public static String getDailyForecastUsingIp(String type) {
+		DefaultHttpClient httpClient = new DefaultHttpClient();
+		try {
+			URL myIP = new URL(IpAddress);
+
+			in = new BufferedReader(new InputStreamReader(myIP.openStream()));
+
+		} catch (Exception e1) {
+		}
+		try {
+			// Find IP
+			HttpGet getRequestCoordIP = new HttpGet(
+					getCoordinates + in.readLine() + "?access_key=" + AccessIPkey + "&format=1");
+
 			getRequestCoordIP.addHeader("accept", "application/json");
 
 			HttpResponse responseCoord = httpClient.execute(getRequestCoordIP);
 
-			IpAddress coordIP = null; 
+			IpAddress coordIP = null;
 
 			ObjectMapper mapperCoordIP = new ObjectMapper();
 			mapperCoordIP.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
 			coordIP = mapperCoordIP.readValue(responseCoord.getEntity().getContent(), IpAddress.class);
-			
-			//OpenWeather data
-			HttpGet getRequest=new HttpGet(OpenWeatherOneCall+"?"+coordIP.toString()+"&exclude=minutely,alerts&appid="+OpenWeatherApiKey+"&units="+type);
+
+			// OpenWeather data
+			HttpGet getRequest = new HttpGet(OpenWeatherOneCall + "?" + coordIP.toString()
+					+ "&exclude=minutely,alerts&appid=" + OpenWeatherApiKey + "&units=" + type);
 			getRequest.addHeader("accept", "application/json");
-			HttpResponse response=httpClient.execute(getRequest);
+			HttpResponse response = httpClient.execute(getRequest);
 			System.out.println(coordIP.toString());
-			DailyWeather c = null;
-			ObjectMapper mapper=new ObjectMapper();
+			
+			ObjectMapper mapper = new ObjectMapper();
 			mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-			c=mapper.readValue(response.getEntity().getContent(), DailyWeather.class);
-				System.out.println(c.toString());
-		}
-		catch(JacksonException e) {
+			d = mapper.readValue(response.getEntity().getContent(), DailyWeather.class);
+			
+		} catch (JacksonException e) {
 			e.printStackTrace();
-		}
-		catch(ClientProtocolException e) {
+		} catch (ClientProtocolException e) {
 			e.printStackTrace();
-		}
-		catch(IOException e) {
+		} catch (IOException e) {
 			e.printStackTrace();
-		}catch (Exception e1) 
-       {
-       }finally{
-		 httpClient.close();
+		} catch (Exception e1) {
+		} finally {
+			httpClient.close();
 		}
-	}	
-	public static void getHourlyApi(String location,String type){
-		DefaultHttpClient httpClient=new DefaultHttpClient();
+		return d.toString();
+	}
+
+	public static String getHourlyApi(String location, String type) {
+		DefaultHttpClient httpClient = new DefaultHttpClient();
 		try {
-			HttpGet getRequestCity=new HttpGet(OpenWeatherCurrent+"?q="+location+"&appid="+OpenWeatherApiKey);
+			HttpGet getRequestCity = new HttpGet(OpenWeatherCurrent + "?q=" + location + "&appid=" + OpenWeatherApiKey);
 			getRequestCity.addHeader("accept", "application/json");
-			HttpResponse responseCity=httpClient.execute(getRequestCity);
+			HttpResponse responseCity = httpClient.execute(getRequestCity);
 			CoordTest city = null;
-			ObjectMapper mapperCity=new ObjectMapper();
+			ObjectMapper mapperCity = new ObjectMapper();
 			mapperCity.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-			city=mapperCity.readValue(responseCity.getEntity().getContent(), CoordTest.class);
-			
-			HttpGet getRequest=new HttpGet(OpenWeatherOneCall+"?"+city.toString()+"&exclude=current,daily,minutely,alerts&appid="+OpenWeatherApiKey+"&units="+type);
+			city = mapperCity.readValue(responseCity.getEntity().getContent(), CoordTest.class);
+
+			HttpGet getRequest = new HttpGet(OpenWeatherOneCall + "?" + city.toString()
+					+ "&exclude=current,daily,minutely,alerts&appid=" + OpenWeatherApiKey + "&units=" + type);
 			getRequest.addHeader("accept", "application/json");
-			HttpResponse response=httpClient.execute(getRequest);
-			
-			HourlyWeather c = null;
-			ObjectMapper mapper=new ObjectMapper();
+			HttpResponse response = httpClient.execute(getRequest);
+
+			ObjectMapper mapper = new ObjectMapper();
 			mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-			c=mapper.readValue(response.getEntity().getContent(), HourlyWeather.class);
-			System.out.println(c.toString());
-		}
-		catch(JacksonException e) {
+			h = mapper.readValue(response.getEntity().getContent(), HourlyWeather.class);
+//			if(c.getTimezone()==null) {
+//				System.out.println("Unrecognized city");
+//			}else {
+//				System.out.println(c.toString());
+//			}
+		} catch (JacksonException e) {
 			e.printStackTrace();
-		}
-		catch(ClientProtocolException e) {
+		} catch (ClientProtocolException e) {
 			e.printStackTrace();
-		}
-		catch(IOException e) {
+		} catch (IOException e) {
 			e.printStackTrace();
-		}finally{
-			   httpClient.close();
+		} finally {
+			httpClient.close();
 		}
+		return h.toString();
 	}
-	public static void getHourlyForecastUsingIp(String type) {
-		DefaultHttpClient httpClient = new DefaultHttpClient();		
+
+	public static String getHourlyForecastUsingIp(String type) {
+		DefaultHttpClient httpClient = new DefaultHttpClient();
 		try {
-		  URL myIP = new URL(IpAddress);		
-		  in = new BufferedReader(new InputStreamReader(myIP.openStream()));		   
-		  }catch (Exception e1) 
-		  {
-		  }try {
-			//Find IP
-			HttpGet getRequestCoordIP = new HttpGet(getCoordinates+in.readLine()+"?access_key="+AccessIPkey+"&format=1");			
-			getRequestCoordIP.addHeader("accept", "application/json");		
+			URL myIP = new URL(IpAddress);
+			in = new BufferedReader(new InputStreamReader(myIP.openStream()));
+		} catch (Exception e1) {
+		}
+		try {
+			// Find IP
+			HttpGet getRequestCoordIP = new HttpGet(
+					getCoordinates + in.readLine() + "?access_key=" + AccessIPkey + "&format=1");
+			getRequestCoordIP.addHeader("accept", "application/json");
 			HttpResponse responseCoord = httpClient.execute(getRequestCoordIP);
-			IpAddress coordIP = null; 	
+			IpAddress coordIP = null;
 			ObjectMapper mapperCoordIP = new ObjectMapper();
-			mapperCoordIP.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);		
+			mapperCoordIP.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 			coordIP = mapperCoordIP.readValue(responseCoord.getEntity().getContent(), IpAddress.class);
-				
-			//OpenWeather data
-			HttpGet getRequest=new HttpGet(OpenWeatherOneCall+"?"+coordIP.toString()+"&exclude=minutely,alerts&appid="+OpenWeatherApiKey+"&units="+type);
+
+			// OpenWeather data
+			HttpGet getRequest = new HttpGet(OpenWeatherOneCall + "?" + coordIP.toString()
+					+ "&exclude=minutely,alerts&appid=" + OpenWeatherApiKey + "&units=" + type);
 			getRequest.addHeader("accept", "application/json");
-			HttpResponse response=httpClient.execute(getRequest);
+			HttpResponse response = httpClient.execute(getRequest);
 			System.out.println(coordIP.toString());
-			HourlyWeather c = null;
-			ObjectMapper mapper=new ObjectMapper();
+			
+			ObjectMapper mapper = new ObjectMapper();
 			mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-			c=mapper.readValue(response.getEntity().getContent(), HourlyWeather.class);
-			System.out.println(c.toString());
-			}
-			catch(JacksonException e) {
-				e.printStackTrace();
-			}
-			catch(ClientProtocolException e) {
-				e.printStackTrace();
-			}
-			catch(IOException e) {
-				e.printStackTrace();
-			}catch (Exception e1) 
-		  	{
-		  	}finally{
-			 httpClient.close();
-			}
+			h = mapper.readValue(response.getEntity().getContent(), HourlyWeather.class);
+			
+		} catch (JacksonException e) {
+			e.printStackTrace();
+		} catch (ClientProtocolException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (Exception e1) {
+		} finally {
+			httpClient.close();
+		}
+		return h.toString();
 	}
-		
+
 }
-
