@@ -3,6 +3,7 @@
 ## Overview
 This project was an application implemented for the purpose of the course: "Java Programming Language" during my MSc in Advanced Information Systems.
 It is Maven Java project provides functionalities to interact with weather data using the OpenWeather API. It includes methods to retrieve current weather, daily and hourly forecasts, based on location or IP address.
+You can also browse the [user-manual](https://github.com/DimitrisTsel/WeatherApp/blob/master/manual-weatherApp.pdf) (in greek).
 
 ## Project Structure
 The project structure is as follows:
